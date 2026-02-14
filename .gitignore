@@ -1,0 +1,21 @@
+# Cria o arquivo .gitignore com as regras de segurança
+Set-Content -Path .gitignore -Value @"
+# Firebase Security (Essencial)
+oficina-fg-motos-*.json
+firebase.json
+.firebase/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# OS and IDE
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
+"@

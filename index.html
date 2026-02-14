@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EletroTech - Gestor de Orçamentos</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
+    
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        [v-cloak] { display: none; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div id="app" v-cloak>
+        <div v-if="!logado" class="flex items-center justify-center min-h-screen bg-slate-900 p-4">
+            <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-sm border-t-8 border-blue-600 text-center">
+                <h1 class="text-3xl font-black italic text-blue-600 mb-2">ELETROTECH</h1>
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-8">Soluções Elétricas</p>
+                <input v-model="senhaInput" @keyup.enter="fazerLogin" type="password" placeholder="Chave de Acesso" class="w-full p-4 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-600 text-center font-bold">
+                <button @click="fazerLogin" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ENTRAR</button>
+            </div>
+        </div>
+
+        <div v-else class="max-w-md mx-auto p-4 pb-20 no-print">
+            <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl border-l-4 border-blue-600 shadow-sm">
+                <div class="leading-tight">
+                    <h1 class="font-bold text-gray-800 uppercase text-xs italic">EletroTech Soluções</h1>
+                    <p class="text-[9px] text-gray-400 font-bold uppercase">CNPJ: 43.801.765/0001-33</p>
+                </div>
+                <button @click="logado = false" class="text-[10px] font-black text-red-500 uppercase underline">Sair</button>
+            </header>
+
+            <div class="bg-white p-6 rounded-2xl shadow-md mb-6 border border-gray-100">
+                <input v-model="orcamento.cliente_nome" type="text" placeholder="NOME DO CLIENTE" class="w-full p-3 border rounded-lg mb-4 outline-none font-bold uppercase text-sm bg-gray-50 focus:border-blue-500">
+                
+                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-gray-50/50 relative">
+                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs font-bold">✕</button>
+                    <input v-model="item.descricao" type="text" class="w-full text-xs p-2 bg-transparent border-b mb-2 outline-none uppercase font-semibold" placeholder="Descrição">
+                    <div class="flex items-center gap-2">
+                        <span class="text-blue-600 font-black text-xs italic">R$</span>
+                        <input v-model.number="item.valor" type="number" step="0.01" class="w-full p-2 bg-transparent border-b outline-none font-black text-blue-600 text-lg">
+                    </div>
+                </div>
+
+                <button @click="adicionarItem" class="w-full py-2 border-2 border-dashed border-blue-200 text-blue-500 rounded-xl font-bold text-[10px] mb-6 uppercase">+ ADICIONAR ITEM</button>
+
+                <div class="border-t pt-4 flex justify-between items-center mb-6 font-bold text-2xl text-blue-600">
+                    <span class="text-gray-400 uppercase text-[10px]">Total</span>
+                    <span class="italic font-black text-blue-600">R$ {{ totalCalculado.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</span>
+                </div>
+                
+                <button @click="salvarOrcamento" :disabled="!podeSalvar" class="w-full py-5 bg-blue-600 text-white rounded-xl font-black shadow-lg uppercase tracking-tighter disabled:opacity-50 hover:scale-[1.01] active:scale-95 transition">
+                    💾 Gravar no Firebase
+                </button>
+            </div>
+
+            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-3 px-2 tracking-widest">Orçamentos na Nuvem</h3>
+            <div v-for="h in historico" :key="h.id" class="bg-white p-4 rounded-xl shadow-sm mb-3 flex justify-between items-center border hover:border-blue-300 transition">
+                <div class="flex flex-col">
+                    <span class="text-[8px] text-gray-400 font-black mb-1 italic">DOC: {{ h.id }}</span>
+                    <p class="font-bold text-gray-800 uppercase text-[10px]">{{ h.cliente_nome }}</p>
+                    <p class="text-blue-600 font-black text-xs italic">R$ {{ Number(h.total || h.itens.reduce((a,b)=>a+b.valor,0)).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
+                </div>
+                <div class="flex gap-2">
+                    <button @click="visualizarPDF(h)" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition">PDF</button>
+                    <button @click="excluirOrcamento(h.id)" class="px-3 py-2 text-red-300 hover:text-red-600 transition">🗑️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp } = Vue;
+
+        // Rota Interna da Vercel
+        const API_URL = "/api";
+
+        createApp({
+            data() {
+                return {
+                    logado: false,
+                    senhaInput: '',
+                    apiKey: 'eletrotech2026',
+                    orcamento: { 
+                        cliente_nome: '', 
+                        itens: [
+                            { descricao: 'MÃO DE OBRA TÉCNICA', valor: 0 },
+                            { descricao: 'MATERIAIS ELÉTRICOS', valor: 0 }
+                        ] 
+                    },
+                    historico: []
+                }
+            },
+            computed: {
+                totalCalculado() {
+                    return this.orcamento.itens.reduce((acc, it) => acc + (Number(it.valor) || 0), 0);
+                },
+                podeSalvar() {
+                    return this.orcamento.cliente_nome.trim().length > 2 && this.totalCalculado > 0;
+                }
+            },
+            methods: {
+                fazerLogin() {
+                    if (this.senhaInput === this.apiKey) {
+                        this.logado = true;
+                        this.carregarHistorico();
+                    } else { alert("Chave incorreta!"); }
+                },
+                adicionarItem() { this.orcamento.itens.push({ descricao: '', valor: 0 }); },
+                removerItem(index) { if(this.orcamento.itens.length > 1) this.orcamento.itens.splice(index, 1); },
+                
+                async carregarHistorico() {
+                    try {
+                        const r = await fetch(`${API_URL}/orcamentos`, {
+                            headers: { 'X-API-Key': this.apiKey }
+                        });
+                        if (r.ok) this.historico = await r.json();
+                    } catch (e) { console.error("Erro ao carregar:", e); }
+                },
+
+                async salvarOrcamento() {
+                    try {
+                        const payload = {
+                            ...this.orcamento,
+                            total: this.totalCalculado,
+                            data_criacao: new Date().toISOString()
+                        };
+                        const r = await fetch(`${API_URL}/orcamentos/salvar`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'X-API-Key': this.apiKey
+                            },
+                            body: JSON.stringify(payload)
+                        });
+                        if (r.ok) {
+                            alert("✅ Gravado com sucesso no Firebase!");
+                            this.orcamento = { cliente_nome: '', itens: [{ descricao: 'MÃO DE OBRA TÉCNICA', valor: 0 }] };
+                            this.carregarHistorico();
+                        }
+                    } catch (e) { alert("Erro ao salvar!"); }
+                },
+
+                async excluirOrcamento(id) {
+                    if (!confirm("Excluir este orçamento da nuvem?")) return;
+                    try {
+                        await fetch(`${API_URL}/orcamentos/${id}`, { 
+                            method: 'DELETE', 
+                            headers: { 'X-API-Key': this.apiKey }
+                        });
+                        this.carregarHistorico();
+                    } catch (e) { console.error(e); }
+                },
+
+                visualizarPDF(orc) {
+                    const janela = window.open('', '_blank');
+                    const total = orc.total || orc.itens.reduce((a,b)=>a+b.valor,0);
+                    janela.document.write(`
+                        <html>
+                        <head><script src="https://cdn.tailwindcss.com"><\/script></head>
+                        <body class="p-10 bg-white" onload="window.print()">
+                            <div class="max-w-4xl mx-auto border-2 border-gray-100 p-10 shadow-xl">
+                                <div class="flex justify-between items-center border-b-4 border-blue-600 pb-6 mb-10">
+                                    <h1 class="text-4xl font-black italic text-blue-600 tracking-tighter">ELETROTECH</h1>
+                                    <div class="text-right text-[10px] text-gray-500 uppercase leading-tight font-bold">
+                                        <p class="text-gray-800 text-sm">EletroTech Soluções Elétricas</p>
+                                        <p>CNPJ: 43.801.765/0001-33</p>
+                                    </div>
+                                </div>
+                                <h2 class="text-xl font-black text-gray-800 uppercase mb-8 border-l-4 border-blue-600 pl-4 italic">Cliente: ${orc.cliente_nome}</h2>
+                                <table class="w-full mb-10 border-collapse">
+                                    <thead><tr class="bg-gray-800 text-white uppercase text-[10px] text-left"><th class="p-4">Descrição</th><th class="p-4 text-right">Investimento</th></tr></thead>
+                                    <tbody class="text-sm">
+                                        ${orc.itens.map(i => `
+                                            <tr class="border-b font-semibold uppercase text-[12px]">
+                                                <td class="p-4 text-gray-600">${i.descricao}</td>
+                                                <td class="p-4 text-right text-blue-600 font-black italic text-lg">R$ ${Number(i.valor).toFixed(2)}</td>
+                                            </tr>`).join('')}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="bg-blue-600 text-white font-black">
+                                            <td class="p-5 uppercase text-xs">Total Geral:</td>
+                                            <td class="p-5 text-right text-3xl italic">R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </body></html>`);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
