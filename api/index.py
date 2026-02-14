@@ -36,20 +36,20 @@ except Exception:
 
 API_KEY_SECRET = "eletrotech2026"
 
-@app.get("/api/orcamentos")
+@app.get("/orcamentos")
 async def listar(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
     if not db: raise HTTPException(status_code=500, detail="Banco não inicializado")
     docs = db.collection("orcamentos").stream()
     return [{"id": d.id, **d.to_dict()} for d in docs]
 
-@app.post("/api/orcamentos/salvar")
+@app.post("/orcamentos/salvar")
 async def salvar(orc: dict, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
     db.collection("orcamentos").add(orc)
     return {"status": "sucesso"}
 
-@app.delete("/api/orcamentos/{id}")
+@app.delete("/orcamentos/{id}")
 async def excluir(id: str, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
     db.collection("orcamentos").document(id).delete()
