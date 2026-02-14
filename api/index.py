@@ -15,21 +15,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 🛡️ Blindagem de Inicialização: Previne Erro 500 por variáveis mal formatadas
-try:
-    if not firebase_admin._apps:
-        # Busca a string do JSON nas variáveis de ambiente da Vercel
-        cert_content = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
+# 🛡️ Inicialização com Limpeza de Caracteres (Corrige o Erro 500)
+if not firebase_admin._apps:
+    try:
+        # Busca a string bruta da variável de ambiente
+        raw_cert = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
         
-        if not cert_content:
-            print("❌ ERRO: Variável FIREBASE_SERVICE_ACCOUNT não configurada na Vercel.")
+        if not raw_cert:
+            print("❌ ERRO: Variável FIREBASE_SERVICE_ACCOUNT não encontrada.")
         else:
-            # Converte a string em dicionário e inicializa o SDK
-            cert_dict = json.loads(cert_content)
+            # LIMPEZA INDUSTRIAL: Remove quebras de linha e caracteres de controle invisíveis
+            # que costumam aparecer ao copiar/colar do Windows para o navegador.
+            clean_cert = "".join(char for char in raw_cert if ord(char) >= 32)
+            
+            cert_dict = json.loads(clean_cert)
             cred = credentials.Certificate(cert_dict)
             firebase_admin.initialize_app(cred)
-except Exception as e:
-    print(f"❌ ERRO CRÍTICO NA INICIALIZAÇÃO DO FIREBASE: {str(e)}")
+    except Exception as e:
+        print(f"❌ ERRO NA CARGA DO JSON: {str(e)}")
 
 # Instância do Banco de Dados
 db = firestore.client()
@@ -38,35 +41,35 @@ API_KEY_SECRET = "eletrotech2026"
 @app.get("/api/orcamentos")
 async def listar(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Chave de API inválida")
+        raise HTTPException(status_code=401, detail="Não autorizado")
     
     try:
-        # Busca todos os documentos na coleção 'orcamentos'
+        # Busca documentos no Firestore
         docs = db.collection("orcamentos").stream()
         return [{"id": d.id, **d.to_dict()} for d in docs]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao ler banco: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/orcamentos/salvar")
 async def salvar(orc: dict, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Chave de API inválida")
+        raise HTTPException(status_code=401, detail="Não autorizado")
     
     try:
-        # Adiciona o orçamento ao Firestore
+        # Salva o orçamento no Firestore
         db.collection("orcamentos").add(orc)
         return {"status": "sucesso"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao salvar: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/orcamentos/{id}")
 async def excluir(id: str, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Chave de API inválida")
+        raise HTTPException(status_code=401, detail="Não autorizado")
     
     try:
-        # Exclui o documento específico pelo ID
+        # Deleta o documento pelo ID único do Firestore
         db.collection("orcamentos").document(id).delete()
         return {"status": "ok"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao excluir: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
