@@ -4,6 +4,7 @@
     { "source": "/api/(.*)", "destination": "/api/index.py" },
     { "source": "/favicon.ico", "destination": "/favicon.ico" },
     { "source": "/logo.jpg", "destination": "/logo.jpg" },
-    { "source": "/", "destination": "/index.html" }
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
