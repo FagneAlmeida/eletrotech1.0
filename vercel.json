@@ -1,9 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/orcamentos", "destination": "/api/index.py" },
-    { "source": "/api/salvar", "destination": "/api/index.py" },
-    { "source": "/api/excluir/(.*)", "destination": "/api/index.py" },
-    { "source": "/(.*)", "destination": "/$1" }
+    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/favicon.ico", "destination": "/favicon.ico" },
+    { "source": "/logo.jpg", "destination": "/logo.jpg" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }
