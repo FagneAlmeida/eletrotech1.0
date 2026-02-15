@@ -61,10 +61,18 @@ async def excluir(doc_id: str, x_api_key: str = Header(None)):
 
 # --- ROTA DO SITE ---
 
-@app.get("/", response_class=HTMLResponse)
-async def servir_site():
-    for p in ["index.html", "../index.html"]:
-        if os.path.exists(p):
-            with open(p, "r", encoding="utf-8") as f:
-                return f.read()
-    return "<h1>Sócio, index.html não encontrado no servidor.</h1>"
+# --- ROTA DE LISTAGEM SINCRONIZADA ---
+
+# Removi o "/listar" para casar com a chamada do seu app: GET /api/orcamentos
+@app.get("/api/orcamentos")
+async def listar_orcamentos(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY_SECRET: 
+        raise HTTPException(status_code=401)
+    
+    try:
+        # Busca no Firestore ordenada por data
+        docs = db.collection("orcamentos").order_by("data_criacao", direction=firestore.Query.DESCENDING).stream()
+        return [{"id": d.id, **d.to_dict()} for d in docs]
+    except Exception as e:
+        print(f"Erro ao listar: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
