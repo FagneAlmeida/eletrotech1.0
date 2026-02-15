@@ -104,7 +104,7 @@
                 gerarPDF(orc) {
             const total = orc.total || orc.itens.reduce((a, b) => a + (Number(b.valor) || 0), 0);
             
-            // Conteúdo HTML do Orçamento
+            // O conteúdo HTML DEVE estar dentro desta variável htmlContent entre crases (``)
             const htmlContent = `
                 <html>
                 <head>
@@ -117,7 +117,7 @@
                     <div class="border-4 border-slate-900 p-6 min-h-[270mm] flex flex-col justify-between">
                         <div>
                             <div class="flex justify-between items-center border-b-8 border-blue-600 pb-6 mb-8">
-                                <h1 class="text-3xl font-black italic text-slate-900 italic tracking-tighter uppercase">ELETROTECH</h1>
+                                <h1 class="text-3xl font-black italic text-slate-900 tracking-tighter uppercase">ELETROTECH</h1>
                                 <div class="text-right text-[8px] font-bold text-slate-500 uppercase">
                                     <p class="text-slate-900 text-[10px]">CNPJ: 43.801.765/0001-33</p>
                                     <p>Fagne Almeida Santos</p>
@@ -125,25 +125,26 @@
                             </div>
                             <h2 class="text-lg font-black text-slate-900 uppercase italic mb-6 border-l-4 border-blue-600 pl-3">Cliente: ${orc.cliente_nome}</h2>
                             <table class="w-full mb-8 border-collapse">
-                                <thead><tr class="bg-slate-900 text-white text-[10px] uppercase"><th class="p-3 text-left">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead>
-                                <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-[10px] text-slate-600"><td class="p-3">${i.descricao}</td><td class="p-3 text-right text-blue-600 font-black italic">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
+                                <thead><tr class="bg-slate-900 text-white text-[10px] uppercase tracking-widest"><th class="p-3 text-left">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead>
+                                <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-[10px] text-slate-600"><td class="p-3">${i.descricao}</td><td class="p-3 text-right text-blue-600 font-black italic text-lg">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
                             </table>
                         </div>
                         <div>
                             <div class="bg-blue-600 text-white p-4 flex justify-between items-center rounded-xl mb-6 shadow-lg">
                                 <span class="text-[10px] font-black uppercase italic tracking-widest">Total da Proposta</span>
-                                <span class="text-2xl font-black italic">R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                <span class="text-2xl font-black italic tracking-tighter">R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                             </div>
                             <div class="grid grid-cols-2 gap-4 text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                                <div><p class="text-slate-900 italic">💳 Pagamento: PIX / Cartão (12x)</p></div>
-                                <div class="text-right"><p class="text-slate-900 italic">📅 Validade: 10 Dias</p></div>
+                                <div><p class="text-slate-900 mb-1 italic">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
+                                <div class="text-right"><p class="text-slate-900 mb-1 italic">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
                             </div>
+                            <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic">Obrigado pela confiança!</p>
                         </div>
                     </div>
                     <script>window.onload = () => { setTimeout(() => { window.print(); }, 500); };<\/script>
                 </body></html>`;
 
-           // Início da Lógica de Download/Visualização Blindada
+            // Início da Lógica de Download/Visualização Blindada
             const blob = new Blob([htmlContent], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             
