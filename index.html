@@ -182,7 +182,7 @@
                     
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `Orcamento_${orc.cliente_nome.replace(/\s+/g, '_')}.html`;
+                    link.download = `Orcamento_${orc.cliente_nome.replace(/\s+/g, '_')}.pdf`;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
