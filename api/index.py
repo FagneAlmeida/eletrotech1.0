@@ -15,54 +15,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Inicialização Blindada do Firebase
+# Inicialização Blindada do Firebase via Variável de Ambiente
 if not firebase_admin._apps:
     try:
         raw_cert = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
         if raw_cert:
-            # Limpeza industrial de caracteres de controle
             clean_cert = "".join(char for char in raw_cert if ord(char) >= 32)
             cert_dict = json.loads(clean_cert)
             cred = credentials.Certificate(cert_dict)
             firebase_admin.initialize_app(cred)
-        else:
-            print("⚠️ FIREBASE_SERVICE_ACCOUNT não configurada na Vercel.")
     except Exception as e:
-        print(f"❌ ERRO FIREBASE: {str(e)}")
+        print(f"Erro Firebase: {e}")
 
 db = firestore.client()
 API_KEY_SECRET = "eletrotech2026"
 
-# --- ROTAS INDUSTRIAIS ---
+# --- ROTAS DA FERRAMENTA ---
 
-# --- ROTAS CORRIGIDAS E BLINDADAS ---
-
-@app.get("/orcamentos")  # A Vercel entrega como /api/orcamentos
+@app.get("/orcamentos")
 async def listar(x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Chave Inválida")
-    if not db: 
-        raise HTTPException(status_code=500, detail="Erro de conexão com Banco")
-    
-    # Busca ordenando por data para o histórico funcionar
+    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
+    # Busca orçamentos ordenados pelos mais recentes
     docs = db.collection("orcamentos").order_by("data_criacao", direction=firestore.Query.DESCENDING).stream()
     return [{"id": d.id, **d.to_dict()} for d in docs]
 
-@app.post("/salvar")  # A Vercel entrega como /api/salvar
+@app.post("/salvar")
 async def salvar(orc: dict, x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401)
-    try:
-        # Garante que o histórico tenha uma data para ordenação
-        orc["data_criacao"] = datetime.now().isoformat()
-        db.collection("orcamentos").add(orc)
-        return {"status": "sucesso"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
+    orc["data_criacao"] = datetime.now().isoformat()
+    db.collection("orcamentos").add(orc)
+    return {"status": "sucesso"}
 
-@app.delete("/excluir/{doc_id}")  # A Vercel entrega como /api/excluir/ID
+@app.delete("/excluir/{doc_id}")
 async def excluir(doc_id: str, x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401)
+    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
     db.collection("orcamentos").document(doc_id).delete()
     return {"status": "removido"}

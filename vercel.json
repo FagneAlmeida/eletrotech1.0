@@ -1,7 +1,9 @@
 {
   "version": 2,
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index.py" },
+    { "source": "/api/orcamentos", "destination": "/api/index.py" },
+    { "source": "/api/salvar", "destination": "/api/index.py" },
+    { "source": "/api/excluir/(.*)", "destination": "/api/index.py" },
     { "source": "/(.*)", "destination": "/$1" }
   ]
 }
