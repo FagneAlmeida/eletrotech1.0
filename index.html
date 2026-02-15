@@ -103,34 +103,46 @@
                 },
                 gerarPDF(orc) {
                     const win = window.open('', '_blank');
-                    win.document.write(`<html><head><script src="https://cdn.tailwindcss.com"><\/script></head><body class="p-[20mm] bg-white font-sans" onload="window.print()">
-                        <div class="border-4 border-slate-900 p-10 h-[250mm] flex flex-col justify-between">
-                            <div>
-                                <div class="flex justify-between items-center border-b-8 border-blue-600 pb-8 mb-10">
-                                    <h1 class="text-5xl font-black italic text-slate-900 tracking-tighter">ELETROTECH</h1>
-                                    <div class="text-right text-[10px] font-bold text-slate-500 uppercase">
-                                        <p class="text-slate-900 text-sm italic">CNPJ: 43.801.765/0001-33</p>
-                                        <p>Responsável: Fagne Almeida Santos</p>
+                    win.document.write(`
+                        <html>
+                        <head>
+                            <title>Orçamento - ${orc.cliente_nome}</title>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>
+                                @media print { @page { size: A4; margin: 0; } }
+                            </style>
+                        </head>
+                        <body class="p-[20mm] bg-white font-sans" onload="setTimeout(() => { window.print(); window.close(); }, 500)">
+                            <div class="border-4 border-slate-900 p-10 h-[250mm] flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-center border-b-8 border-blue-600 pb-8 mb-10">
+                                        <h1 class="text-5xl font-black italic text-slate-900 tracking-tighter">ELETROTECH</h1>
+                                        <div class="text-right text-[10px] font-bold text-slate-500 uppercase">
+                                            <p class="text-slate-900 text-sm italic">CNPJ: 43.801.765/0001-33</p>
+                                            <p>Responsável: Fagne Almeida Santos</p>
+                                        </div>
                                     </div>
+                                    <h2 class="text-2xl font-black text-slate-900 uppercase italic mb-8 border-l-8 border-blue-600 pl-4">Cliente: ${orc.cliente_nome}</h2>
+                                    <table class="w-full mb-10 border-collapse">
+                                        <thead><tr class="bg-slate-900 text-white text-[11px] uppercase tracking-widest"><th class="p-4 text-left">Descrição do Serviço</th><th class="p-4 text-right">Investimento</th></tr></thead>
+                                        <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-xs"><td class="p-4 text-slate-600">${i.descricao}</td><td class="p-4 text-right text-blue-600 italic font-black text-lg">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
+                                    </table>
                                 </div>
-                                <h2 class="text-2xl font-black text-slate-900 uppercase italic mb-8 border-l-8 border-blue-600 pl-4">Cliente: ${orc.cliente_nome}</h2>
-                                <table class="w-full mb-10 border-collapse">
-                                    <thead><tr class="bg-slate-900 text-white text-[11px] uppercase tracking-widest"><th class="p-4 text-left">Descrição do Serviço</th><th class="p-4 text-right">Investimento</th></tr></thead>
-                                    <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-xs"><td class="p-4 text-slate-600">${i.descricao}</td><td class="p-4 text-right text-blue-600 italic font-black text-lg">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
-                                </table>
+                                <div>
+                                    <div class="bg-blue-600 text-white p-6 flex justify-between items-center rounded-xl mb-8 shadow-xl">
+                                        <span class="text-xs font-black uppercase italic tracking-widest">Total Geral da Proposta</span>
+                                        <span class="text-4xl font-black italic tracking-tighter">R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                                        <div><p class="text-slate-900 mb-1 italic">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
+                                        <div class="text-right"><p class="text-slate-900 mb-1 italic">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
+                                    </div>
+                                    <p class="text-center text-[10px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic">Obrigado pela confiança!</p>
+                                </div>
                             </div>
-                            <div>
-                                <div class="bg-blue-600 text-white p-6 flex justify-between items-center rounded-xl mb-8 shadow-xl">
-                                    <span class="text-xs font-black uppercase italic tracking-widest">Total Geral da Proposta</span>
-                                    <span class="text-4xl font-black italic tracking-tighter">R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                    <div><p class="text-slate-900 mb-1 italic">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
-                                    <div class="text-right"><p class="text-slate-900 mb-1 italic">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
-                                </div>
-                                <p class="text-center text-[10px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic">Obrigado pela confiança!</p>
-                            </div>
-                        </div></body></html>`);
+                        </body>
+                        </html>`);
+                    win.document.close(); // Essencial para navegadores mobile
                 }
             }
         }).mount('#app');
