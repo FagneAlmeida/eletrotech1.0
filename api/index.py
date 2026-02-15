@@ -35,33 +35,34 @@ API_KEY_SECRET = "eletrotech2026"
 
 # --- ROTAS INDUSTRIAIS ---
 
-@app.get("/orcamentos")
+# --- ROTAS CORRIGIDAS E BLINDADAS ---
+
+@app.get("/orcamentos")  # A Vercel entrega como /api/orcamentos
 async def listar(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Não autorizado")
+        raise HTTPException(status_code=401, detail="Chave Inválida")
+    if not db: 
+        raise HTTPException(status_code=500, detail="Erro de conexão com Banco")
     
-    # Busca e ordena por data decrescente
+    # Busca ordenando por data para o histórico funcionar
     docs = db.collection("orcamentos").order_by("data_criacao", direction=firestore.Query.DESCENDING).stream()
     return [{"id": d.id, **d.to_dict()} for d in docs]
 
-@app.post("/salvar")
+@app.post("/salvar")  # A Vercel entrega como /api/salvar
 async def salvar(orc: dict, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Não autorizado")
+        raise HTTPException(status_code=401)
     try:
-        # Adiciona timestamp do servidor para o histórico
+        # Garante que o histórico tenha uma data para ordenação
         orc["data_criacao"] = datetime.now().isoformat()
         db.collection("orcamentos").add(orc)
         return {"status": "sucesso"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.delete("/excluir/{doc_id}")
+@app.delete("/excluir/{doc_id}")  # A Vercel entrega como /api/excluir/ID
 async def excluir(doc_id: str, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: 
-        raise HTTPException(status_code=401, detail="Não autorizado")
-    try:
-        db.collection("orcamentos").document(doc_id).delete()
-        return {"status": "removido"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=401)
+    db.collection("orcamentos").document(doc_id).delete()
+    return {"status": "removido"}
