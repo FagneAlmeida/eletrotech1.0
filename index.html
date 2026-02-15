@@ -149,13 +149,20 @@
                 },
 
                 enviarWhatsApp(orc) {
-                    let msg = `*ELETROTECH SOLUÇÕES ELÉTRICAS*\n`;
-                    msg += `*ORÇAMENTO PARA:* ${orc.cliente_nome.toUpperCase()}\n\n`;
+                    const total = orc.total || orc.itens.reduce((a,b)=>a+b.valor,0);
+    
+                   // Texto de saudação personalizado conforme sua solicitação
+                    let msg = `Olá, aqui é o seu técnico Fagne Almeida enviando a proposta de orçamento para a execução dos serviços elétricos do seu empreendimento.\n\n`;
+    
+                    msg += `*RESUMO DO ORÇAMENTO*\n`;
                     orc.itens.forEach(i => {
-                        msg += `• ${i.descricao}: R$ ${Number(i.valor).toFixed(2)}\n`;
-                    });
-                    msg += `\n*INVESTIMENTO TOTAL: R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}*`;
-                    msg += `\n\n_Documento formalizado via EletroTech App._`;
+                    msg += `• ${i.descricao}: R$ ${Number(i.valor).toFixed(2)}\n`;
+                  });
+    
+                    msg += `\n*INVESTIMENTO TOTAL: R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}*`;
+                    msg += `\n\nAssim que receber e ver o orçamento, entre em contato comigo para tratarmos dos detalhes para o fechamento do serviço.`;
+
+                   // Abre a conversa. O PDF deve ser gerado pelo botão "PDF" e enviado como anexo no Zap.
                     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
                 },
 
