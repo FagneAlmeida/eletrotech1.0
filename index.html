@@ -6,35 +6,38 @@
     <title>EletroTech Pro</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>[v-cloak] { display: none; }</style>
+    <style>
+        [v-cloak] { display: none; }
+        @media print { .no-print { display: none; } }
+    </style>
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans">
     <div id="app" v-cloak>
         <div v-if="!logado" class="min-h-screen flex items-center justify-center bg-slate-900 p-4">
             <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
-                <h1 class="text-3xl font-black italic text-blue-600 mb-6 uppercase tracking-tighter">ELETROTECH</h1>
+                <h1 class="text-3xl font-black italic text-blue-600 mb-6 uppercase tracking-tighter italic">ELETROTECH</h1>
                 <input v-model="senhaInput" @keyup.enter="fazerLogin" type="password" placeholder="Chave de Acesso" class="w-full p-4 border rounded-xl mb-4 text-center font-bold outline-none focus:border-blue-500">
-                <button @click="fazerLogin" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ACESSAR</button>
+                <button @click="fazerLogin" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ACESSAR SISTEMA</button>
             </div>
         </div>
 
-        <div v-else class="max-w-2xl mx-auto p-4">
+        <div v-else class="max-w-2xl mx-auto p-4 no-print">
             <header class="bg-slate-900 text-white p-6 rounded-2xl mb-6 flex justify-between items-center shadow-xl border-b-4 border-blue-500">
                 <div class="flex items-center gap-3">
                     <img src="/static/logo.jpg" class="h-8 rounded" onerror="this.style.display='none'">
-                    <div>
+                    <div class="leading-tight">
                         <h2 class="text-lg font-black italic uppercase">EletroTech Soluções</h2>
                         <p class="text-[8px] uppercase font-bold opacity-50 tracking-widest">CNPJ: 43.801.765/0001-33</p>
                     </div>
                 </div>
-                <button @click="logado = false" class="text-xs font-bold text-red-400 underline">SAIR</button>
+                <button @click="logado = false" class="text-xs font-bold text-red-400 underline uppercase">Sair</button>
             </header>
 
             <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 mb-6">
                 <input v-model="orcamento.cliente_nome" placeholder="NOME DO CLIENTE" class="w-full p-4 border rounded-xl mb-4 font-bold uppercase bg-slate-50 outline-none focus:border-blue-500">
                 
-                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-slate-50/50 relative border-l-4 border-blue-400">
-                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px] font-bold">✕</button>
+                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-slate-50/50 relative border-l-4 border-blue-400 transition-all">
+                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs font-bold shadow-lg">✕</button>
                     <input v-model="item.descricao" placeholder="Descrição do Serviço ou Material" class="w-full text-xs p-2 border-b mb-2 bg-transparent uppercase font-semibold outline-none focus:border-blue-400">
                     <div class="flex items-center gap-2">
                         <span class="text-blue-600 font-bold text-xs italic">R$</span>
@@ -42,23 +45,28 @@
                     </div>
                 </div>
 
-                <button @click="adicionarItem" class="w-full py-2 border-2 border-dashed border-blue-200 text-blue-500 rounded-xl font-bold text-[10px] mb-6 tracking-widest">+ ADICIONAR ITEM</button>
+                <button @click="adicionarItem" class="w-full py-2 border-2 border-dashed border-blue-200 text-blue-500 rounded-xl font-bold text-[10px] mb-6 tracking-widest hover:bg-blue-50 transition uppercase">+ Adicionar Item</button>
+                
                 <div class="flex justify-between items-center mb-6 p-4 bg-slate-900 text-white rounded-xl italic font-black">
                     <span class="text-[10px] uppercase opacity-60">Total Estimado</span>
                     <span class="text-2xl tracking-tighter">R$ {{ totalCalculado.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</span>
                 </div>
-                <button @click="salvarOrcamento" class="w-full py-5 bg-blue-600 text-white rounded-xl font-black shadow-lg uppercase hover:bg-blue-700 transition">💾 Gravar e Atualizar Nuvem</button>
+                
+                <button @click="salvarOrcamento" class="w-full py-5 bg-blue-600 text-white rounded-xl font-black shadow-lg uppercase hover:bg-blue-700 transition tracking-tighter">
+                    💾 Gravar e Atualizar Nuvem
+                </button>
             </div>
 
+            <h3 class="text-[10px] font-black text-slate-400 uppercase mb-3 px-2 tracking-widest italic">Histórico Profissional (Firebase)</h3>
             <div v-for="h in historico" :key="h.id" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mb-4 flex justify-between items-center hover:border-blue-200 transition">
                 <div>
-                    <h4 class="font-bold text-slate-800 uppercase text-xs tracking-tight">{{ h.cliente_nome }}</h4>
-                    <p class="text-blue-600 font-black italic text-sm">R$ {{ Number(h.total).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
+                    <h4 class="font-bold text-slate-800 uppercase text-xs tracking-tight italic">{{ h.cliente_nome }}</h4>
+                    <p class="text-blue-600 font-black italic text-sm">R$ {{ Number(h.total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
                 </div>
                 <div class="flex gap-2">
-                    <button @click="compartilhar(h)" class="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm hover:bg-green-600 hover:text-white transition">📲</button>
-                    <button @click="gerarPDF(h)" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-bold shadow-md hover:bg-blue-600 transition">PDF</button>
-                    <button @click="excluirOrcamento(h.id)" class="p-2 text-red-300 hover:text-red-600 transition">🗑️</button>
+                    <button @click="compartilhar(h)" class="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm hover:bg-green-600 hover:text-white transition" title="WhatsApp">📲</button>
+                    <button @click="gerarPDF(h)" class="px-4 py-2 bg-slate-900 text-white rounded-lg text-[10px] font-bold shadow-md hover:bg-blue-600 transition uppercase">PDF</button>
+                    <button @click="excluirOrcamento(h.id)" class="p-2 text-red-200 hover:text-red-600 transition">🗑️</button>
                 </div>
             </div>
         </div>
@@ -66,10 +74,13 @@
 
     <script>
         const { createApp } = Vue;
+        const API_KEY_SECRET = "eletrotech2026";
+
         createApp({
             data() {
                 return {
-                    logado: false, senhaInput: '', apiKey: 'eletrotech2026',
+                    logado: false,
+                    senhaInput: '',
                     orcamento: { cliente_nome: '', itens: [{descricao: 'MÃO DE OBRA TÉCNICA', valor: 0}] },
                     historico: []
                 }
@@ -81,31 +92,31 @@
             },
             methods: {
                 fazerLogin() { 
-                    if (this.senhaInput === this.apiKey) { 
+                    if (this.senhaInput === API_KEY_SECRET) { 
                         this.logado = true; 
                         this.carregarHistorico(); 
-                    } else alert("Chave incorreta!"); 
+                    } else { alert("Chave incorreta!"); }
                 },
                 adicionarItem() { this.orcamento.itens.push({descricao: '', valor: 0}); },
                 removerItem(idx) { if(this.orcamento.itens.length > 1) this.orcamento.itens.splice(idx, 1); },
                 
                 async carregarHistorico() {
                     try {
-                        const r = await fetch("/api/orcamentos", { headers: {'X-API-Key': this.apiKey} });
+                        const r = await fetch("/api/orcamentos", { headers: {'X-API-Key': API_KEY_SECRET} });
                         if (r.ok) this.historico = await r.json();
-                    } catch (e) { console.error("Erro infra:", e); }
+                    } catch (e) { console.error("Erro na carga:", e); }
                 },
 
                 async salvarOrcamento() {
                     try {
                         const r = await fetch("/api/orcamentos/salvar", {
                             method: 'POST',
-                            headers: {'Content-Type': 'application/json', 'X-API-Key': this.apiKey},
+                            headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY_SECRET},
                             body: JSON.stringify({ ...this.orcamento, total: this.totalCalculado })
                         });
                         if (r.ok) { 
-                            alert("✅ Orçamento Gravado!"); 
-                            this.orcamento.cliente_nome = ''; 
+                            alert("✅ Gravado com sucesso!"); 
+                            this.orcamento = { cliente_nome: '', itens: [{descricao: 'MÃO DE OBRA TÉCNICA', valor: 0}] };
                             this.carregarHistorico(); 
                         }
                     } catch (e) { alert("Erro ao salvar."); }
@@ -116,7 +127,7 @@
                     try {
                         await fetch(`/api/orcamentos/excluir/${id}`, { 
                             method: 'DELETE', 
-                            headers: {'X-API-Key': this.apiKey} 
+                            headers: {'X-API-Key': API_KEY_SECRET} 
                         });
                         this.carregarHistorico();
                     } catch (e) { console.error(e); }
@@ -130,7 +141,13 @@
                 },
 
                 gerarPDF(orc) {
-                    const total = orc.total || orc.itens.reduce((a, b) => a + (Number(b.valor) || 0), 0);
+                    const totalVal = Number(orc.total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                    const itensHTML = orc.itens.map(i => `
+                        <tr class="border-b font-bold uppercase text-[10px] text-slate-600">
+                            <td class="p-3">${i.descricao}</td>
+                            <td class="p-3 text-right text-blue-600 font-black italic">R$ ${Number(i.valor).toFixed(2)}</td>
+                        </tr>`).join('');
+
                     const htmlContent = `
                         <html>
                         <head>
@@ -143,40 +160,42 @@
                             <div class="border-4 border-slate-900 p-6 min-h-[270mm] flex flex-col justify-between">
                                 <div>
                                     <div class="flex justify-between items-center border-b-8 border-blue-600 pb-6 mb-8">
-                                        <h1 class="text-3xl font-black italic text-slate-900 tracking-tighter uppercase italic">ELETROTECH</h1>
+                                        <h1 class="text-3xl font-black italic text-slate-900 italic tracking-tighter uppercase italic">ELETROTECH</h1>
                                         <div class="text-right text-[8px] font-bold text-slate-500 uppercase leading-tight">
-                                            <p class="text-slate-900 text-[10px]">CNPJ: 43.801.765/0001-33</p>
+                                            <p class="text-slate-900 text-[10px] italic">CNPJ: 43.801.765/0001-33</p>
                                             <p>Responsável: Fagne Almeida Santos</p>
                                         </div>
                                     </div>
                                     <h2 class="text-lg font-black text-slate-900 uppercase italic mb-6 border-l-4 border-blue-600 pl-3 italic">Cliente: ${orc.cliente_nome}</h2>
                                     <table class="w-full mb-8 border-collapse">
-                                        <thead><tr class="bg-slate-900 text-white text-[10px] uppercase font-black italic"><th class="p-3 text-left">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead>
-                                        <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-[10px] text-slate-600"><td class="p-3">${i.descricao}</td><td class="p-3 text-right text-blue-600 font-black italic">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
+                                        <thead><tr class="bg-slate-900 text-white text-[10px] uppercase font-black italic italic"><th class="p-3 text-left">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead>
+                                        <tbody>${itensHTML}</tbody>
                                     </table>
                                 </div>
                                 <div>
-                                    <div class="bg-blue-600 text-white p-4 flex justify-between items-center rounded-xl mb-6 shadow-lg">
+                                    <div class="bg-blue-600 text-white p-4 flex justify-between items-center rounded-xl mb-6 shadow-lg italic">
                                         <span class="text-[10px] font-black uppercase italic tracking-widest">Total da Proposta</span>
-                                        <span class="text-2xl font-black italic">R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                        <span class="text-2xl font-black italic">R$ ${totalVal}</span>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4 text-[8px] font-bold text-slate-400 uppercase tracking-tighter leading-tight">
-                                        <div><p class="text-slate-900 italic font-black mb-1">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
-                                        <div class="text-right"><p class="text-slate-900 italic font-black mb-1">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
+                                    <div class="grid grid-cols-2 gap-4 text-[8px] font-bold text-slate-400 uppercase tracking-tighter leading-tight italic">
+                                        <div><p class="text-slate-900 italic font-black mb-1 italic">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
+                                        <div class="text-right"><p class="text-slate-900 italic font-black mb-1 italic">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
                                     </div>
-                                    <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic">Obrigado pela confiança!</p>
+                                    <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic italic">Obrigado pela confiança!</p>
                                 </div>
                             </div>
-                            <script>window.onload = () => { setTimeout(() => { window.print(); }, 500); };<\/script>
                         </body></html>`;
 
                     const blob = new Blob([htmlContent], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
-                    const win = window.open(url, '_blank');
                     
+                    // Comportamento Híbrido: Abre e Baixa
+                    const win = window.open(url, '_blank');
+                    if(win) win.onload = () => win.print();
+
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = `Orcamento_${orc.cliente_nome.replace(/\s+/g, '_')}.html`;
+                    link.download = "Orcamento_" + orc.cliente_nome.replace(/\s+/g, '_') + ".html";
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
