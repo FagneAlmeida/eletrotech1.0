@@ -60,3 +60,14 @@ async def deletar_orcamento(doc_id: str, x_api_key: str = Header(None)):
         raise HTTPException(status_code=401)
     db.collection("orcamentos").document(doc_id).delete()
     return {"status": "removido"}
+from fastapi.responses import HTMLResponse
+
+@app.get("/", response_class=HTMLResponse)
+async def servir_site():
+    try:
+        # Busca o index.html que está na raiz (um nível acima da pasta /api)
+        path = os.path.join(os.getcwd(), "index.html")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"<h1>Erro ao carregar site: {e}</h1>"
