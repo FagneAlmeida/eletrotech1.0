@@ -1,16 +1,16 @@
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse # Adicionado FileResponse
 from fastapi.staticfiles import StaticFiles
 import firebase_admin
 from firebase_admin import credentials, firestore
-from datetime import datetime
 import os, json
 
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Montagem de arquivos estáticos para Logo e Favicon
+# 1. Blindagem de Estáticos (Garante a Logo e Favicon)
+# Certifique-se de que sua logo.jpg e favicon.ico estão na raiz do projeto
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 if not firebase_admin._apps:
@@ -24,6 +24,12 @@ if not firebase_admin._apps:
 db = firestore.client()
 API_KEY_SECRET = "eletrotech2026"
 
+# 2. Rota Corretiva para o Favicon (Mata o erro 404 do console)
+@app.get('/favicon.ico', include_in_schema=False)
+async def favicon():
+    return FileResponse(os.path.join(os.getcwd(), "favicon.ico")) if os.path.exists("favicon.ico") else None
+
+# --- ROTAS DE API (MANTIDAS) ---
 @app.get("/api/orcamentos")
 async def listar(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
@@ -33,19 +39,12 @@ async def listar(x_api_key: str = Header(None)):
 @app.post("/api/orcamentos/salvar")
 async def salvar(orc: dict, x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
-    orc["data_criacao"] = datetime.now().isoformat()
     db.collection("orcamentos").add(orc)
     return {"status": "sucesso"}
 
-@app.delete("/api/orcamentos/excluir/{doc_id}")
-async def excluir(doc_id: str, x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
-    db.collection("orcamentos").document(doc_id).delete()
-    return {"status": "removido"}
-
 @app.get("/", response_class=HTMLResponse)
 async def servir_site():
-    for p in ["index.html", "../index.html"]:
-        if os.path.exists(p):
-            with open(p, "r", encoding="utf-8") as f: return f.read()
-    return "<h1>Sistema EletroTech Online</h1>"
+    path = os.path.join(os.getcwd(), "index.html")
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f: return f.read()
+    return "<h1>Erro: index.html não encontrado</h1>"
