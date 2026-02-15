@@ -10,7 +10,7 @@ import os, json
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# 1. Blindagem de Estáticos e Favicon
+# 1. Blindagem de Estáticos (Garante Logo e Favicon)
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 @app.get('/favicon.ico', include_in_schema=False)
@@ -18,20 +18,18 @@ async def favicon():
     file_path = os.path.join(os.getcwd(), "favicon.ico")
     return FileResponse(file_path) if os.path.exists(file_path) else None
 
-# 2. Inicialização do Firebase
 if not firebase_admin._apps:
     try:
         raw_cert = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
         if raw_cert:
             clean_cert = "".join(char for char in raw_cert if ord(char) >= 32)
             firebase_admin.initialize_app(credentials.Certificate(json.loads(clean_cert)))
-    except Exception as e:
-        print(f"Erro Firebase: {e}")
+    except Exception: pass
 
 db = firestore.client()
 API_KEY_SECRET = "eletrotech2026"
 
-# --- ROTAS DE API ---
+# --- ROTAS DE PRODUÇÃO ---
 @app.get("/api/orcamentos")
 async def listar(x_api_key: str = Header(None)):
     if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
@@ -44,6 +42,12 @@ async def salvar(orc: dict, x_api_key: str = Header(None)):
     orc["data_criacao"] = datetime.now().isoformat()
     db.collection("orcamentos").add(orc)
     return {"status": "sucesso"}
+
+@app.delete("/api/orcamentos/excluir/{doc_id}")
+async def excluir(doc_id: str, x_api_key: str = Header(None)):
+    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
+    db.collection("orcamentos").document(doc_id).delete()
+    return {"status": "removido"}
 
 @app.get("/", response_class=HTMLResponse)
 async def servir_site():
