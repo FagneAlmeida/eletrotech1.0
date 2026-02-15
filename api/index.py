@@ -1,10 +1,13 @@
-from fastapi import FastAPI, HTTPException, Header
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
 import os
 import json
+from fastapi import FastAPI, HTTPException, Header
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
@@ -71,3 +74,22 @@ async def servir_site():
             return f.read()
     except Exception as e:
         return f"<h1>Erro ao carregar site: {e}</h1>"
+    
+    app.mount("/static", StaticFiles(directory="."), name="static")
+
+@app.get("/", response_class=HTMLResponse)
+async def servir_site():
+    try:
+        # No Railway, o diretório de execução costuma ser a raiz do projeto
+        # Vamos tentar localizar o index.html de forma absoluta
+        base_path = os.getcwd()
+        path = os.path.join(base_path, "index.html")
+        
+        if not os.path.exists(path):
+            # Fallback caso ele esteja um nível acima da pasta /api
+            path = os.path.join(base_path, "..", "index.html")
+
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    except Exception as e:
+        return f"<h1>Sócio, erro técnico ao carregar o site: {e}</h1>"
