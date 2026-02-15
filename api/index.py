@@ -8,11 +8,9 @@ from datetime import datetime
 import os, json
 
 app = FastAPI()
-
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# 1. Rota da Logotipo (Essencial para parar o 404 da imagem)
-# No HTML, use <img src="/static/logo.jpg">
+# Montagem de arquivos estáticos para Logo e Favicon
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 if not firebase_admin._apps:
@@ -25,8 +23,6 @@ if not firebase_admin._apps:
 
 db = firestore.client()
 API_KEY_SECRET = "eletrotech2026"
-
-# --- ROTAS DE API SINCRONIZADAS COM O FRONTEND ---
 
 @app.get("/api/orcamentos")
 async def listar(x_api_key: str = Header(None)):
@@ -47,10 +43,9 @@ async def excluir(doc_id: str, x_api_key: str = Header(None)):
     db.collection("orcamentos").document(doc_id).delete()
     return {"status": "removido"}
 
-# --- ROTA PARA SERVIR O SITE (RAIZ) ---
 @app.get("/", response_class=HTMLResponse)
 async def servir_site():
     for p in ["index.html", "../index.html"]:
         if os.path.exists(p):
             with open(p, "r", encoding="utf-8") as f: return f.read()
-    return "<h1>Sócio, index.html não encontrado no servidor.</h1>"
+    return "<h1>Sistema EletroTech Online</h1>"

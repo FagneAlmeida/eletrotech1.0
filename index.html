@@ -3,74 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EletroTech - Profissionalismo em Orçamentos</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>">
-    
+    <title>EletroTech Pro - Orçamentos Industriais</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @media print { 
+            .no-print { display: none !important; }
+            body { background: white; }
+            .page-a4 { width: 210mm; height: 297mm; padding: 20mm; margin: 0 auto; }
+        }
         [v-cloak] { display: none; }
-        @media print { .no-print { display: none; } }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen font-sans">
+<body class="bg-slate-50 text-slate-900">
     <div id="app" v-cloak>
-        <div v-if="!logado" class="flex items-center justify-center min-h-screen bg-slate-900 p-4">
-            <div class="bg-white p-10 rounded-3xl shadow-2xl w-full max-w-sm border-t-8 border-blue-600 text-center">
-                <h1 class="text-3xl font-black italic text-blue-600 mb-2 tracking-tighter">ELETROTECH</h1>
-                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mb-8">Gestão Profissional de Serviços</p>
-                <input v-model="senhaInput" @keyup.enter="fazerLogin" type="password" placeholder="Chave de Acesso" class="w-full p-4 border rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-600 text-center font-bold">
-                <button @click="fazerLogin" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ENTRAR NO SISTEMA</button>
-            </div>
-        </div>
-
-        <div v-else class="max-w-2xl mx-auto p-4 pb-20 no-print">
-            <header class="flex justify-between items-center mb-6 bg-white p-4 rounded-xl border-l-4 border-blue-600 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <img src="/static/logo.jpg" alt="Logo" class="h-8 rounded" onerror="this.style.display='none'">
-                    <div class="leading-tight">
-                        <h1 class="font-bold text-gray-800 uppercase text-xs italic">EletroTech Soluções</h1>
-                        <p class="text-[9px] text-gray-400 font-bold uppercase">CNPJ: 43.801.765/0001-33</p>
-                    </div>
+        <div v-if="logado" class="max-w-3xl mx-auto p-6 no-print">
+            <div class="bg-slate-900 text-white p-8 rounded-3xl mb-8 flex justify-between items-center shadow-2xl border-b-4 border-blue-500">
+                <div>
+                    <h1 class="text-4xl font-black italic tracking-tighter">ELETROTECH <span class="text-blue-500">PRO</span></h1>
+                    <p class="text-[10px] uppercase font-bold tracking-[0.3em] opacity-60">Sistemas Elétricos de Alta Performance</p>
                 </div>
-                <button @click="logado = false" class="text-[10px] font-black text-red-500 uppercase underline">Sair</button>
-            </header>
-
-            <div class="bg-white p-6 rounded-2xl shadow-md mb-6 border border-gray-100">
-                <input v-model="orcamento.cliente_nome" type="text" placeholder="NOME DO CLIENTE" class="w-full p-3 border rounded-lg mb-4 outline-none font-bold uppercase text-sm bg-gray-50 focus:border-blue-500">
-                
-                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-gray-50/50 relative">
-                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs font-bold">✕</button>
-                    <input v-model="item.descricao" type="text" class="w-full text-xs p-2 bg-transparent border-b mb-2 outline-none uppercase font-semibold" placeholder="Descrição do Serviço ou Material">
-                    <div class="flex items-center gap-2">
-                        <span class="text-blue-600 font-black text-xs italic">R$</span>
-                        <input v-model.number="item.valor" type="number" step="0.01" class="w-full p-2 bg-transparent border-b outline-none font-black text-blue-600 text-lg">
-                    </div>
-                </div>
-
-                <button @click="adicionarItem" class="w-full py-2 border-2 border-dashed border-blue-200 text-blue-500 rounded-xl font-bold text-[10px] mb-6 uppercase tracking-widest">+ ADICIONAR ITEM</button>
-
-                <div class="border-t pt-4 flex justify-between items-center mb-6 font-bold text-2xl text-blue-600">
-                    <span class="text-gray-400 uppercase text-[10px]">Total do Orçamento</span>
-                    <span class="italic font-black text-blue-600">R$ {{ totalCalculado.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</span>
-                </div>
-                
-                <button @click="salvarOrcamento" :disabled="!podeSalvar" class="w-full py-5 bg-blue-600 text-white rounded-xl font-black shadow-lg uppercase tracking-tighter disabled:opacity-50 hover:bg-blue-700 transition">
-                    💾 Gravar e Atualizar Nuvem
-                </button>
+                <img src="/static/logo.jpg" class="h-12 rounded-lg border border-slate-700 shadow-inner" onerror="this.style.display='none'">
             </div>
 
-            <h3 class="text-[10px] font-black text-gray-400 uppercase mb-3 px-2 tracking-widest">Histórico Profissional (Firebase)</h3>
-            <div v-for="h in historico" :key="h.id" class="bg-white p-4 rounded-xl shadow-sm mb-3 flex justify-between items-center border hover:border-blue-300 transition">
-                <div class="flex flex-col">
-                    <span class="text-[8px] text-gray-400 font-black mb-1 italic tracking-widest">REGISTRO: {{ h.id.substring(0,8) }}</span>
-                    <p class="font-bold text-gray-800 uppercase text-[10px]">{{ h.cliente_nome }}</p>
-                    <p class="text-blue-600 font-black text-xs italic">R$ {{ Number(h.total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
+            <div v-for="h in historico" :key="h.id" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-4 flex justify-between items-center">
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase italic">Registro #{{ h.id.substring(0,6) }}</p>
+                    <h3 class="font-bold text-slate-800 uppercase tracking-tight">{{ h.cliente_nome }}</h3>
+                    <p class="text-blue-600 font-black text-lg italic">R$ {{ Number(h.total).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
                 </div>
-                <div class="flex gap-2">
-                    <button @click="enviarWhatsApp(h)" class="p-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition" title="Enviar WhatsApp">📲</button>
-                    <button @click="visualizarPDF(h)" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-black uppercase hover:bg-blue-600 hover:text-white transition">PDF</button>
-                    <button @click="excluirOrcamento(h.id)" class="px-3 py-2 text-red-300 hover:text-red-600 transition">🗑️</button>
+                <div class="flex gap-3">
+                    <button @click="compartilhar(h)" class="p-3 bg-green-100 text-green-700 rounded-xl hover:bg-green-600 hover:text-white transition shadow-sm">📲</button>
+                    <button @click="gerarDocumento(h)" class="px-6 py-3 bg-slate-900 text-white rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-600 transition shadow-lg">BAIXAR PDF</button>
                 </div>
             </div>
         </div>
@@ -78,129 +42,84 @@
 
     <script>
         const { createApp } = Vue;
-        const API_URL = "/api/orcamentos"; // Caminho industrial unificado
-
         createApp({
             data() {
                 return {
-                    logado: false,
-                    senhaInput: '',
+                    logado: true, // Para teste, mude para false em prod
                     apiKey: 'eletrotech2026',
-                    orcamento: { 
-                        cliente_nome: '', 
-                        itens: [
-                            { descricao: 'MÃO DE OBRA TÉCNICA', valor: 0 },
-                            { descricao: 'MATERIAIS ELÉTRICOS', valor: 0 }
-                        ] 
-                    },
                     historico: []
                 }
             },
-            computed: {
-                totalCalculado() {
-                    return this.orcamento.itens.reduce((acc, it) => acc + (Number(it.valor) || 0), 0);
-                },
-                podeSalvar() {
-                    return this.orcamento.cliente_nome.trim().length > 2 && this.totalCalculado > 0;
-                }
-            },
             methods: {
-                fazerLogin() {
-                    if (this.senhaInput === this.apiKey) {
-                        this.logado = true;
-                        this.carregarHistorico();
-                    } else { alert("Chave de acesso inválida!"); }
-                },
-                adicionarItem() { this.orcamento.itens.push({ descricao: '', valor: 0 }); },
-                removerItem(index) { if(this.orcamento.itens.length > 1) this.orcamento.itens.splice(index, 1); },
-                
-                async carregarHistorico() {
-                    try {
-                        const r = await fetch(API_URL, { headers: { 'X-API-Key': this.apiKey } });
-                        if (r.ok) this.historico = await r.json();
-                    } catch (e) { console.error("Erro infra:", e); }
+                compartilhar(orc) {
+                    const saudacao = `Olá, aqui é o seu técnico *Fagne Almeida*.\nEstou enviando a proposta de orçamento para o seu empreendimento.\n\n`;
+                    let corpo = `*DETALHAMENTO:*\n`;
+                    orc.itens.forEach(i => corpo += `• ${i.descricao}: R$ ${Number(i.valor).toFixed(2)}\n`);
+                    corpo += `\n*INVESTIMENTO TOTAL: R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n\n`;
+                    corpo += `_Aguardamos seu contato para fechamento do serviço._`;
+                    
+                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(saudacao + corpo)}`, '_blank');
                 },
 
-                async salvarOrcamento() {
-                    try {
-                        const payload = { ...this.orcamento, total: this.totalCalculado };
-                        const r = await fetch(`${API_URL}/salvar`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-API-Key': this.apiKey },
-                            body: JSON.stringify(payload)
-                        });
-                        if (r.ok) {
-                            alert("✅ Orçamento formalizado e salvo!");
-                            this.orcamento = { cliente_nome: '', itens: [{ descricao: 'MÃO DE OBRA TÉCNICA', valor: 0 }, { descricao: 'MATERIAIS ELÉTRICOS', valor: 0 }] };
-                            this.carregarHistorico();
-                        }
-                    } catch (e) { alert("Erro ao comunicar com Firebase."); }
-                },
-
-                async excluirOrcamento(id) {
-                    if (!confirm("Remover este registro permanentemente?")) return;
-                    try {
-                        await fetch(`${API_URL}/excluir/${id}`, { 
-                            method: 'DELETE', 
-                            headers: { 'X-API-Key': this.apiKey }
-                        });
-                        this.carregarHistorico();
-                    } catch (e) { console.error(e); }
-                },
-
-                enviarWhatsApp(orc) {
-                    const total = orc.total || orc.itens.reduce((a,b)=>a+b.valor,0);
-    
-                   // Texto de saudação personalizado conforme sua solicitação
-                    let msg = `Olá, aqui é o seu técnico Fagne Almeida enviando a proposta de orçamento para a execução dos serviços elétricos do seu empreendimento.\n\n`;
-    
-                    msg += `*RESUMO DO ORÇAMENTO*\n`;
-                    orc.itens.forEach(i => {
-                    msg += `• ${i.descricao}: R$ ${Number(i.valor).toFixed(2)}\n`;
-                  });
-    
-                    msg += `\n*INVESTIMENTO TOTAL: R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}*`;
-                    msg += `\n\nAssim que receber e ver o orçamento, entre em contato comigo para tratarmos dos detalhes para o fechamento do serviço.`;
-
-                   // Abre a conversa. O PDF deve ser gerado pelo botão "PDF" e enviado como anexo no Zap.
-                    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
-                },
-
-                visualizarPDF(orc) {
-                    const janela = window.open('', '_blank');
-                    janela.document.write(`
+                gerarDocumento(orc) {
+                    const win = window.open('', '_blank');
+                    win.document.write(`
                         <html>
-                        <head><script src="https://cdn.tailwindcss.com"><\/script></head>
-                        <body class="p-10 bg-white" onload="window.print()">
-                            <div class="max-w-4xl mx-auto border-2 border-gray-100 p-10">
-                                <div class="flex justify-between items-center border-b-4 border-blue-600 pb-6 mb-10">
-                                    <div class="flex items-center gap-4">
-                                        <img src="/static/logo.jpg" class="h-16 rounded" onerror="this.style.display='none'">
-                                        <h1 class="text-4xl font-black italic text-blue-600 tracking-tighter">ELETROTECH</h1>
+                        <head>
+                            <script src="https://cdn.tailwindcss.com"><\/script>
+                            <style>@page { size: A4; margin: 0; }</style>
+                        </head>
+                        <body class="bg-white p-[20mm] font-sans" onload="window.print()">
+                            <div class="border-4 border-slate-900 p-8 h-full flex flex-col justify-between">
+                                <div>
+                                    <div class="flex justify-between items-start border-b-8 border-blue-600 pb-8 mb-10">
+                                        <div>
+                                            <h1 class="text-5xl font-black italic text-slate-900 tracking-tighter">ELETROTECH</h1>
+                                            <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Soluções em Engenharia Elétrica</p>
+                                        </div>
+                                        <div class="text-right text-[11px] font-bold text-slate-500 uppercase">
+                                            <p class="text-slate-900 text-sm">CNPJ: 43.801.765/0001-33</p>
+                                            <p>Campo Grande - MS</p>
+                                            <p>Responsável: Fagne Almeida Santos</p>
+                                        </div>
                                     </div>
-                                    <div class="text-right text-[10px] text-gray-500 uppercase font-bold">
-                                        <p class="text-gray-800 text-sm">EletroTech Soluções Elétricas</p>
-                                        <p>CNPJ: 43.801.765/0001-33</p>
+
+                                    <div class="bg-slate-50 p-6 rounded-lg mb-10 border-l-8 border-slate-900">
+                                        <p class="text-[10px] font-black text-slate-400 uppercase mb-1">Proposta para:</p>
+                                        <h2 class="text-2xl font-black text-slate-900 uppercase italic">${orc.cliente_nome}</h2>
+                                    </div>
+
+                                    <table class="w-full mb-10">
+                                        <thead><tr class="bg-slate-900 text-white text-[11px] uppercase tracking-widest"><th class="p-4 text-left">Item / Serviço</th><th class="p-4 text-right">Investimento</th></tr></thead>
+                                        <tbody>
+                                            ${orc.itens.map(i => `
+                                                <tr class="border-b-2 border-slate-100 font-bold uppercase text-[13px]">
+                                                    <td class="p-5 text-slate-600">${i.descricao}</td>
+                                                    <td class="p-5 text-right text-blue-600 italic">R$ ${Number(i.valor).toFixed(2)}</td>
+                                                </tr>`).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="space-y-6">
+                                    <div class="bg-blue-600 text-white p-6 flex justify-between items-center rounded-xl shadow-xl">
+                                        <span class="text-xs font-black uppercase tracking-widest">Total Geral da Proposta</span>
+                                        <span class="text-4xl font-black italic">R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-8 border-t-2 border-slate-100 pt-8 text-[11px] font-bold text-slate-400 uppercase tracking-tight">
+                                        <div>
+                                            <p class="text-slate-900 mb-2">💳 Formas de Pagamento:</p>
+                                            <p>• PIX, Débito ou Crédito (até 12x)</p>
+                                            <p>• Faturamento via boleto (PJ sob consulta)</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-slate-900 mb-2">📅 Validade e Prazos:</p>
+                                            <p>• Orçamento válido por 10 dias</p>
+                                            <p>• Prazo de execução conforme cronograma</p>
+                                        </div>
                                     </div>
                                 </div>
-                                <h2 class="text-xl font-black text-gray-800 uppercase mb-8 border-l-4 border-blue-600 pl-4 italic">Orçamento: ${orc.cliente_nome}</h2>
-                                <table class="w-full mb-10 border-collapse">
-                                    <thead><tr class="bg-gray-800 text-white uppercase text-[10px] text-left"><th class="p-4">Serviço/Material</th><th class="p-4 text-right">Valor</th></tr></thead>
-                                    <tbody class="text-sm">
-                                        ${orc.itens.map(i => `
-                                            <tr class="border-b font-semibold uppercase text-[12px]">
-                                                <td class="p-4 text-gray-600">${i.descricao}</td>
-                                                <td class="p-4 text-right text-blue-600 font-black italic text-lg">R$ ${Number(i.valor).toFixed(2)}</td>
-                                            </tr>`).join('')}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr class="bg-blue-600 text-white font-black">
-                                            <td class="p-5 uppercase text-xs">Total do Investimento:</td>
-                                            <td class="p-5 text-right text-3xl italic">R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                                <p class="text-center text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-20 italic">Obrigado pela confiança!</p>
                             </div>
                         </body></html>`);
                 }
