@@ -12,7 +12,7 @@
     <div id="app" v-cloak>
         <div v-if="!logado" class="min-h-screen flex items-center justify-center bg-slate-900 p-4">
             <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
-                <h1 class="text-3xl font-black italic text-blue-600 mb-6 uppercase italic tracking-tighter">ELETROTECH</h1>
+                <h1 class="text-3xl font-black italic text-blue-600 mb-6 uppercase tracking-tighter">ELETROTECH</h1>
                 <input v-model="senhaInput" @keyup.enter="fazerLogin" type="password" placeholder="Chave de Acesso" class="w-full p-4 border rounded-xl mb-4 text-center font-bold outline-none focus:border-blue-500">
                 <button @click="fazerLogin" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold shadow-lg hover:bg-blue-700 transition">ACESSAR</button>
             </div>
@@ -24,7 +24,7 @@
                     <img src="/static/logo.jpg" class="h-8 rounded" onerror="this.style.display='none'">
                     <div>
                         <h2 class="text-lg font-black italic uppercase">EletroTech Soluções</h2>
-                        <p class="text-[8px] uppercase font-bold opacity-50">CNPJ: 43.801.765/0001-33</p>
+                        <p class="text-[8px] uppercase font-bold opacity-50 tracking-widest">CNPJ: 43.801.765/0001-33</p>
                     </div>
                 </div>
                 <button @click="logado = false" class="text-xs font-bold text-red-400 underline">SAIR</button>
@@ -33,11 +33,11 @@
             <div class="bg-white p-6 rounded-2xl shadow-md border border-slate-200 mb-6">
                 <input v-model="orcamento.cliente_nome" placeholder="NOME DO CLIENTE" class="w-full p-4 border rounded-xl mb-4 font-bold uppercase bg-slate-50 outline-none focus:border-blue-500">
                 
-                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-slate-50/50 relative">
-                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px]">✕</button>
-                    <input v-model="item.descricao" placeholder="Serviço ou Material" class="w-full text-xs p-2 border-b mb-2 bg-transparent uppercase font-semibold outline-none focus:border-blue-400">
+                <div v-for="(item, index) in orcamento.itens" :key="index" class="mb-4 p-4 border rounded-xl bg-slate-50/50 relative border-l-4 border-blue-400">
+                    <button @click="removerItem(index)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px] font-bold">✕</button>
+                    <input v-model="item.descricao" placeholder="Descrição do Serviço ou Material" class="w-full text-xs p-2 border-b mb-2 bg-transparent uppercase font-semibold outline-none focus:border-blue-400">
                     <div class="flex items-center gap-2">
-                        <span class="text-blue-600 font-bold text-xs italic italic">R$</span>
+                        <span class="text-blue-600 font-bold text-xs italic">R$</span>
                         <input v-model.number="item.valor" type="number" step="0.01" class="w-full p-2 bg-transparent border-b font-black text-lg text-blue-600 outline-none">
                     </div>
                 </div>
@@ -53,7 +53,7 @@
             <div v-for="h in historico" :key="h.id" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mb-4 flex justify-between items-center hover:border-blue-200 transition">
                 <div>
                     <h4 class="font-bold text-slate-800 uppercase text-xs tracking-tight">{{ h.cliente_nome }}</h4>
-                    <p class="text-blue-600 font-black italic text-sm italic">R$ {{ Number(h.total).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
+                    <p class="text-blue-600 font-black italic text-sm">R$ {{ Number(h.total).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
                 </div>
                 <div class="flex gap-2">
                     <button @click="compartilhar(h)" class="p-2 bg-green-50 text-green-600 rounded-lg shadow-sm hover:bg-green-600 hover:text-white transition">📲</button>
@@ -74,35 +74,61 @@
                     historico: []
                 }
             },
-            computed: { totalCalculado() { return this.orcamento.itens.reduce((a, b) => a + (Number(b.valor) || 0), 0); } },
+            computed: { 
+                totalCalculado() { 
+                    return this.orcamento.itens.reduce((a, b) => a + (Number(b.valor) || 0), 0); 
+                } 
+            },
             methods: {
-                fazerLogin() { if (this.senhaInput === this.apiKey) { this.logado = true; this.carregarHistorico(); } else alert("Chave incorreta!"); },
+                fazerLogin() { 
+                    if (this.senhaInput === this.apiKey) { 
+                        this.logado = true; 
+                        this.carregarHistorico(); 
+                    } else alert("Chave incorreta!"); 
+                },
                 adicionarItem() { this.orcamento.itens.push({descricao: '', valor: 0}); },
                 removerItem(idx) { if(this.orcamento.itens.length > 1) this.orcamento.itens.splice(idx, 1); },
+                
                 async carregarHistorico() {
                     try {
                         const r = await fetch("/api/orcamentos", { headers: {'X-API-Key': this.apiKey} });
                         if (r.ok) this.historico = await r.json();
+                    } catch (e) { console.error("Erro infra:", e); }
+                },
+
+                async salvarOrcamento() {
+                    try {
+                        const r = await fetch("/api/orcamentos/salvar", {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json', 'X-API-Key': this.apiKey},
+                            body: JSON.stringify({ ...this.orcamento, total: this.totalCalculado })
+                        });
+                        if (r.ok) { 
+                            alert("✅ Orçamento Gravado!"); 
+                            this.orcamento.cliente_nome = ''; 
+                            this.carregarHistorico(); 
+                        }
+                    } catch (e) { alert("Erro ao salvar."); }
+                },
+
+                async excluirOrcamento(id) {
+                    if (!confirm("Remover orçamento permanentemente?")) return;
+                    try {
+                        await fetch(`/api/orcamentos/excluir/${id}`, { 
+                            method: 'DELETE', 
+                            headers: {'X-API-Key': this.apiKey} 
+                        });
+                        this.carregarHistorico();
                     } catch (e) { console.error(e); }
                 },
-                async salvarOrcamento() {
-                    const r = await fetch("/api/orcamentos/salvar", {
-                        method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': this.apiKey},
-                        body: JSON.stringify({ ...this.orcamento, total: this.totalCalculado })
-                    });
-                    if (r.ok) { alert("Gravado!"); this.orcamento.cliente_nome = ''; this.carregarHistorico(); }
-                },
-                async excluirOrcamento(id) {
-                    if (!confirm("Remover?")) return;
-                    await fetch(`/api/orcamentos/excluir/${id}`, { method: 'DELETE', headers: {'X-API-Key': this.apiKey} });
-                    this.carregarHistorico();
-                },
+
                 compartilhar(orc) {
                     const saudacao = `Olá, aqui é o seu técnico *Fagne Almeida* enviando a proposta de orçamento para o seu empreendimento.\n\n`;
                     let msg = `*INVESTIMENTO TOTAL: R$ ${Number(orc.total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}*\n\n`;
                     msg += `Assim que receber e ver o orçamento, entre em contato comigo para tratarmos dos detalhes para o fechamento do serviço.`;
                     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(saudacao + msg)}`, '_blank');
                 },
+
                 gerarPDF(orc) {
                     const total = orc.total || orc.itens.reduce((a, b) => a + (Number(b.valor) || 0), 0);
                     const htmlContent = `
@@ -117,28 +143,28 @@
                             <div class="border-4 border-slate-900 p-6 min-h-[270mm] flex flex-col justify-between">
                                 <div>
                                     <div class="flex justify-between items-center border-b-8 border-blue-600 pb-6 mb-8">
-                                        <h1 class="text-3xl font-black italic text-slate-900 italic tracking-tighter uppercase italic">ELETROTECH</h1>
-                                        <div class="text-right text-[8px] font-bold text-slate-500 uppercase">
-                                            <p class="text-slate-900 text-[10px] italic">CNPJ: 43.801.765/0001-33</p>
-                                            <p>Fagne Almeida Santos</p>
+                                        <h1 class="text-3xl font-black italic text-slate-900 tracking-tighter uppercase italic">ELETROTECH</h1>
+                                        <div class="text-right text-[8px] font-bold text-slate-500 uppercase leading-tight">
+                                            <p class="text-slate-900 text-[10px]">CNPJ: 43.801.765/0001-33</p>
+                                            <p>Responsável: Fagne Almeida Santos</p>
                                         </div>
                                     </div>
-                                    <h2 class="text-lg font-black text-slate-900 uppercase italic mb-6 border-l-4 border-blue-600 pl-3">Cliente: ${orc.cliente_nome}</h2>
-                                    <table class="w-full mb-8 border-collapse text-left">
-                                        <thead><tr class="bg-slate-900 text-white text-[10px] uppercase tracking-widest font-black italic"><th class="p-3">Descrição do Serviço</th><th class="p-3 text-right">Valor</th></tr></thead>
-                                        <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-[10px] text-slate-600"><td class="p-3">${i.descricao}</td><td class="p-3 text-right text-blue-600 font-black italic italic">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
+                                    <h2 class="text-lg font-black text-slate-900 uppercase italic mb-6 border-l-4 border-blue-600 pl-3 italic">Cliente: ${orc.cliente_nome}</h2>
+                                    <table class="w-full mb-8 border-collapse">
+                                        <thead><tr class="bg-slate-900 text-white text-[10px] uppercase font-black italic"><th class="p-3 text-left">Descrição</th><th class="p-3 text-right">Valor</th></tr></thead>
+                                        <tbody>${orc.itens.map(i => `<tr class="border-b font-bold uppercase text-[10px] text-slate-600"><td class="p-3">${i.descricao}</td><td class="p-3 text-right text-blue-600 font-black italic">R$ ${Number(i.valor).toFixed(2)}</td></tr>`).join('')}</tbody>
                                     </table>
                                 </div>
                                 <div>
-                                    <div class="bg-blue-600 text-white p-4 flex justify-between items-center rounded-xl mb-6 shadow-lg italic">
+                                    <div class="bg-blue-600 text-white p-4 flex justify-between items-center rounded-xl mb-6 shadow-lg">
                                         <span class="text-[10px] font-black uppercase italic tracking-widest">Total da Proposta</span>
                                         <span class="text-2xl font-black italic">R$ ${Number(total).toLocaleString('pt-BR', {minimumFractionDigits: 2})}</span>
                                     </div>
-                                    <div class="grid grid-cols-2 gap-4 text-[8px] font-bold text-slate-400 uppercase tracking-tighter">
-                                        <div><p class="text-slate-900 mb-1 italic font-black">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
-                                        <div class="text-right"><p class="text-slate-900 mb-1 italic font-black">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
+                                    <div class="grid grid-cols-2 gap-4 text-[8px] font-bold text-slate-400 uppercase tracking-tighter leading-tight">
+                                        <div><p class="text-slate-900 italic font-black mb-1">💳 Formas de Pagamento:</p><p>PIX, DÉBITO OU CRÉDITO (ATÉ 12X)</p></div>
+                                        <div class="text-right"><p class="text-slate-900 italic font-black mb-1">📅 Validade da Proposta:</p><p>ORÇAMENTO VÁLIDO POR 10 DIAS</p></div>
                                     </div>
-                                    <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic italic">Obrigado pela confiança!</p>
+                                    <p class="text-center text-[8px] text-slate-300 font-bold uppercase mt-12 tracking-widest italic">Obrigado pela confiança!</p>
                                 </div>
                             </div>
                             <script>window.onload = () => { setTimeout(() => { window.print(); }, 500); };<\/script>
@@ -146,11 +172,8 @@
 
                     const blob = new Blob([htmlContent], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
-                    
-                    // Abrir visualização
                     const win = window.open(url, '_blank');
                     
-                    // Forçar download para Mobile Blindado
                     const link = document.createElement('a');
                     link.href = url;
                     link.download = `Orcamento_${orc.cliente_nome.replace(/\s+/g, '_')}.html`;
