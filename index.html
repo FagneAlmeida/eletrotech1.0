@@ -141,14 +141,15 @@
                             <style>
                                 @media print { 
                                     @page { size: A4; margin: 0; } 
-                                    body { -webkit-print-color-adjust: exact; }
+                                    body { -webkit-print-color-adjust: exact; margin: 0; padding: 0; }
                                 }
+                                .document-container { width: 210mm; min-height: 297mm; padding: 15mm; margin: 0 auto; background: white; }
                             </style>
                         </head>
-                        <body class="p-[12mm] bg-white font-sans" onload="setTimeout(() => { window.print(); }, 800)">
-                            <div class="border-[6px] border-slate-900 p-8 h-[272mm] flex flex-col justify-between relative">
+                        <body class="bg-gray-100" onload="setTimeout(() => { window.print(); }, 1000)">
+                            <div class="document-container border-[6px] border-slate-900 flex flex-col justify-between relative shadow-2xl">
                                 <div>
-                                    <div class="flex justify-between items-start border-b-8 border-blue-600 pb-8 mb-10">
+                                    <div class="flex justify-between items-start border-b-8 border-blue-600 pb-8 mb-8">
                                         <div class="flex items-center gap-4">
                                             <img src="/static/logo.jpg" class="h-16 rounded shadow-sm" onerror="this.style.display='none'">
                                             <div>
@@ -163,45 +164,57 @@
                                         </div>
                                     </div>
 
-                                    <div class="mb-10 bg-slate-50 p-4 rounded-xl border-l-8 border-blue-600">
+                                    <div class="mb-8 bg-slate-50 p-4 rounded-xl border-l-8 border-blue-600">
                                         <h2 class="text-[10px] font-black text-slate-400 uppercase mb-1 italic">Proposta para o Cliente:</h2>
                                         <p class="text-xl font-black text-slate-900 uppercase italic">${orc.cliente_nome}</p>
                                         <p class="text-[10px] font-bold text-slate-500">${orc.cliente_telefone || ''}</p>
                                     </div>
 
-                                    <table class="w-full mb-10 border-collapse">
+                                    <table class="w-full mb-8 border-collapse">
                                         <thead><tr class="bg-slate-900 text-white text-[10px] uppercase font-black italic"><th class="p-4 text-left">Descrição dos Serviços e Materiais</th><th class="p-4 text-right">Valor</th></tr></thead>
                                         <tbody>${itensHTML}</tbody>
                                     </table>
                                 </div>
 
                                 <div>
-                                    <div class="bg-blue-600 text-white p-6 flex justify-between items-center rounded-xl mb-8 shadow-xl">
+                                    <div class="bg-blue-600 text-white p-6 flex justify-between items-center rounded-xl mb-6 shadow-xl italic">
                                         <span class="text-[11px] font-black uppercase tracking-widest italic">Investimento Total</span>
                                         <span class="text-3xl font-black italic">R$ ${totalVal}</span>
                                     </div>
 
-                                    <div class="bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
-                                        <h3 class="text-[9px] font-black text-slate-900 uppercase mb-3 border-b pb-2 italic">Cláusulas Contratuais e Termos de Aceite</h3>
-                                        <div class="text-[8px] font-bold text-slate-600 uppercase leading-relaxed text-justify space-y-2 italic">
-                                            <p>1. A prestação de serviço abrange estritamente a mão de obra elétrica especializada para instalação, manutenção ou substituição de componentes residenciais e industriais.</p>
-                                            <p>2. O presente orçamento poderá sofrer alterações caso sejam identificadas demandas técnicas não previstas durante a inspeção inicial, reservando-se o direito de reajuste em mão de obra e materiais.</p>
-                                            <p>3. CONDIÇÕES DE PAGAMENTO: O contratante concorda com o pagamento antecipado de 50% (cinquenta por cento) do valor total para mobilização e aquisição de materiais, sendo os 50% restantes quitados integralmente na entrega.</p>
-                                            <p>4. Ao assinar este documento ou autorizar via canais digitais, o cliente declara estar de acordo com todos os termos e valores aqui expressos.</p>
+                                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6">
+                                        <h3 class="text-[9px] font-black text-slate-900 uppercase mb-2 border-b pb-1 italic">Cláusulas Contratuais</h3>
+                                        <div class="text-[8px] font-bold text-slate-600 uppercase leading-relaxed text-justify space-y-1 italic">
+                                            <p>1. Serviço de mão de obra elétrica especializada conforme listado acima.</p>
+                                            <p>2. Orçamento sujeito a alterações por demandas técnicas identificadas durante a execução.</p>
+                                            <p>3. PAGAMENTO: 50% para mobilização/materiais e 50% na entrega e inspeção.</p>
+                                            <p>4. O aceite desta proposta implica na concordância com os termos e valores expressos.</p>
                                         </div>
                                     </div>
 
-                                    <div class="flex justify-between items-end gap-8 pt-6 border-t border-slate-200">
-                                        <div class="flex-1 border-t-2 border-slate-900 pt-2 text-center text-[8px] font-black uppercase italic">Assinatura do Cliente</div>
-                                        <div class="flex-1 text-center text-[7px] font-bold text-slate-300 uppercase tracking-widest italic">EletroTech - Jaraguá do Sul / MS</div>
+                                    <div class="flex justify-between items-end gap-8 pt-4 border-t border-slate-200">
+                                        <div class="flex-1 border-t-2 border-slate-900 pt-2 text-center text-[8px] font-black uppercase italic italic">Assinatura do Cliente</div>
+                                        <div class="flex-1 text-center text-[7px] font-bold text-slate-300 uppercase tracking-widest italic italic">EletroTech - Campo Grande / MS</div>
                                     </div>
                                 </div>
                             </div>
                         </body></html>`;
                     
+                    // LÓGICA DE DOWNLOAD FÍSICO (BLOB)
                     const blob = new Blob([htmlContent], { type: 'text/html' });
                     const url = URL.createObjectURL(blob);
-                    window.open(url, '_blank');
+                    
+                    // Abre para visualização/impressão
+                    const win = window.open(url, '_blank');
+                    
+                    // Cria link de download forçado para a memória do celular
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `Orcamento_EletroTech_${orc.cliente_nome.replace(/\s+/g, '_')}.html`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
                     setTimeout(() => URL.revokeObjectURL(url), 10000);
                 }
             }
