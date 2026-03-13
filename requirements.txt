@@ -1,4 +1,5 @@
 fastapi
-firebase-admin
 uvicorn
+jinja2
+firebase-admin
 python-multipart
