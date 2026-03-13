@@ -50,7 +50,9 @@
                 
                 <div class="flex justify-between items-center mb-6 p-4 bg-slate-900 text-white rounded-xl font-black">
                     <span class="text-[10px] uppercase opacity-60">Total Estimado</span>
+                    {% raw %}
                     <span class="text-2xl tracking-tighter italic">R$ {{ totalCalculado.toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</span>
+                    {% endraw %}
                 </div>
                 
                 <button @click="salvarOrcamento" class="w-full py-5 bg-blue-600 text-white rounded-xl font-black shadow-lg uppercase">💾 Gravar Orçamento</button>
@@ -60,7 +62,9 @@
             <div v-for="h in historico" :key="h.id" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mb-4 flex justify-between items-center">
                 <div class="flex-1">
                     <h4 class="font-bold text-slate-800 uppercase text-xs italic">{{ h.cliente_nome }}</h4>
+                    {% raw %}
                     <p class="text-blue-600 font-black italic text-sm">R$ {{ Number(h.total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
+                    {% endraw %}
                 </div>
                 <div class="flex gap-2">
                     <button @click="compartilhar(h)" class="p-2 bg-green-50 text-green-600 rounded-lg transition">📲</button>
@@ -95,15 +99,19 @@
                     this.orcamento.cliente_telefone = v;
                 },
                 async carregarHistorico() {
-                    const r = await fetch("/api/orcamentos", { headers: {'X-API-Key': API_KEY_SECRET} });
-                    if (r.ok) this.historico = await r.json();
+                    try {
+                        const r = await fetch("/api/orcamentos", { headers: {'X-API-Key': API_KEY_SECRET} });
+                        if (r.ok) this.historico = await r.json();
+                    } catch (e) { console.error(e); }
                 },
                 async salvarOrcamento() {
-                    const r = await fetch("/api/orcamentos/salvar", {
-                        method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY_SECRET},
-                        body: JSON.stringify({ ...this.orcamento, total: this.totalCalculado })
-                    });
-                    if (r.ok) { alert("Gravado!"); this.carregarHistorico(); }
+                    try {
+                        const r = await fetch("/api/orcamentos/salvar", {
+                            method: 'POST', headers: {'Content-Type': 'application/json', 'X-API-Key': API_KEY_SECRET},
+                            body: JSON.stringify({ ...this.orcamento, total: this.totalCalculado })
+                        });
+                        if (r.ok) { alert("Gravado!"); this.carregarHistorico(); }
+                    } catch (e) { console.error(e); }
                 },
                 async excluirOrcamento(id) {
                     if (confirm("Remover?")) {
