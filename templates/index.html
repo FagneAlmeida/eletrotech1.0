@@ -61,8 +61,8 @@
             <!-- LISTA -->
             <div v-for="h in historico" :key="h.id" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 mb-4 flex justify-between items-center">
                 <div class="flex-1">
-                    <h4 class="font-bold text-slate-800 uppercase text-xs italic">{{ h.cliente_nome }}</h4>
                     {% raw %}
+                    <h4 class="font-bold text-slate-800 uppercase text-xs italic">{{ h.cliente_nome }}</h4>
                     <p class="text-blue-600 font-black italic text-sm">R$ {{ Number(h.total || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2}) }}</p>
                     {% endraw %}
                 </div>
@@ -183,7 +183,10 @@
                             </div>
                         </body></html>`;
                     const blob = new Blob([htmlContent], { type: 'text/html' });
-                    window.open(URL.createObjectURL(blob), '_blank');
+                    const url = URL.createObjectURL(blob);
+                    
+                    // Abre para visualização e aciona impressão (PDF no mobile)
+                    window.open(url, '_blank');
                 }
             }
         }).mount('#app');
