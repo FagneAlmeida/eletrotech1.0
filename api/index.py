@@ -1,59 +1,56 @@
-from fastapi import FastAPI, HTTPException, Header
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi import FastAPI, Request, HTTPException, Header
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import firebase_admin
 from firebase_admin import credentials, firestore
-from datetime import datetime
-import os, json
+import os
 
-app = FastAPI()
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
-
-# 1. Servir arquivos estáticos (Logo e Favicon)
-app.mount("/static", StaticFiles(directory="."), name="static")
-
-@app.get('/favicon.ico', include_in_schema=False)
-async def favicon():
-    file_path = os.path.join(os.getcwd(), "favicon.ico")
-    return FileResponse(file_path) if os.path.exists(file_path) else None
-
-# 2. Inicialização do Firebase via Variável de Ambiente
+# Inicialização Blindada do Firebase
 if not firebase_admin._apps:
-    try:
-        raw_cert = os.environ.get("FIREBASE_SERVICE_ACCOUNT")
-        if raw_cert:
-            clean_cert = "".join(char for char in raw_cert if ord(char) >= 32)
-            firebase_admin.initialize_app(credentials.Certificate(json.loads(clean_cert)))
-    except Exception as e:
-        print(f"Erro Firebase: {e}")
+    cred = credentials.Certificate("serviceAccountKey.json")
+    firebase_admin.initialize_app(cred)
 
 db = firestore.client()
+app = FastAPI()
+
+# Segurança de Classe Sênior
 API_KEY_SECRET = "eletrotech2026"
 
-# --- ROTAS DE API ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
+@app.get("/")
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
 @app.get("/api/orcamentos")
-async def listar(x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
-    docs = db.collection("orcamentos").order_by("data_criacao", direction=firestore.Query.DESCENDING).stream()
+async def get_orcamentos(x_api_key: str = Header(None)):
+    if x_api_key != API_KEY_SECRET:
+        raise HTTPException(status_code=403, detail="Acesso Negado")
+    
+    docs = db.collection("orcamentos").order_by("cliente_nome").stream()
     return [{"id": d.id, **d.to_dict()} for d in docs]
 
 @app.post("/api/orcamentos/salvar")
-async def salvar(orc: dict, x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
-    orc["data_criacao"] = datetime.now().isoformat()
-    db.collection("orcamentos").add(orc)
-    return {"status": "sucesso"}
+async def salvar_orcamento(request: Request, x_api_key: str = Header(None)):
+    if x_api_key != API_KEY_SECRET:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        dados = await request.json()
+        # O Firestore aceita o dicionário direto, incluindo o novo cliente_telefone
+        doc_ref = db.collection("orcamentos").document()
+        doc_ref.set(dados)
+        return {"status": "sucesso", "id": doc_ref.id}
+    except Exception as e:
+        # Log de erro para evitar o crash do middleware
+        print(f"Erro Crítico no Middleware: {e}")
+        return JSONResponse(status_code=500, content={"detail": str(e)})
 
 @app.delete("/api/orcamentos/excluir/{doc_id}")
-async def excluir(doc_id: str, x_api_key: str = Header(None)):
-    if x_api_key != API_KEY_SECRET: raise HTTPException(status_code=401)
+async def excluir_orcamento(doc_id: str, x_api_key: str = Header(None)):
+    if x_api_key != API_KEY_SECRET:
+        raise HTTPException(status_code=403)
     db.collection("orcamentos").document(doc_id).delete()
     return {"status": "removido"}
-
-@app.get("/", response_class=HTMLResponse)
-async def servir_site():
-    path = os.path.join(os.getcwd(), "index.html")
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f: return f.read()
-    return "<h1>Sistema EletroTech Online</h1>"
